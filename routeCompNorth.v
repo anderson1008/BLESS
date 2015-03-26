@@ -2,8 +2,9 @@
 
 `include "global.v"
 
-module routeCompNorth (dstX, dstY, prodVector);
+module routeCompNorth (valid, dstX, dstY, prodVector);
 
+input valid;
 input [`WIDTH_COORDINATE-1:0] dstX, dstY;
 output [`NUM_PORT-1:0] prodVector;
 
@@ -19,10 +20,10 @@ assign deltaY = {1'b0,dstY} - {1'b0,nextY};
 wire doneX, doneY;
 assign 	doneX = (deltaX == 0) ? 1 : 0;	
 assign 	doneY = (deltaY == 0) ? 1 : 0;	
-assign 	prodVector[1] = ~doneX & deltaX[`WIDTH_COORDINATE];  // +X -> East
-assign 	prodVector[0] = ~doneX & ~deltaX[`WIDTH_COORDINATE];   // -X -> West
-assign 	prodVector[3] = ~doneY & deltaY[`WIDTH_COORDINATE];  // +Y -> North
-assign 	prodVector[2] = ~doneY & ~deltaY[`WIDTH_COORDINATE];   // -Y -> South
-assign 	prodVector[4] = doneX & doneY;	// local port
+assign 	prodVector[1] = valid ? ~doneX & deltaX[`WIDTH_COORDINATE] : 1'b0;  // +X -> East
+assign 	prodVector[0] = valid ? ~doneX & ~deltaX[`WIDTH_COORDINATE] : 1'b0;   // -X -> West
+assign 	prodVector[3] = valid ? ~doneY & deltaY[`WIDTH_COORDINATE] : 1'b0;  // +Y -> North
+assign 	prodVector[2] = valid ? ~doneY & ~deltaY[`WIDTH_COORDINATE] : 1'b0;   // -Y -> South
+assign 	prodVector[4] = valid ? doneX & doneY : 1'b0;	// local port
 
 endmodule
