@@ -4,11 +4,11 @@
 
 module permutationNetwork (din0, din1, din2, din3, dout0, dout1, dout2, dout3);
 
-input [`WIDTH_INTERNAL-1:0] din0, din1, din2, din3;
-output [`WIDTH_INTERNAL-1:0] dout0, dout1, dout2, dout3; // dout0 has highest priority (oldest); dout3 has lowest priority (lastest)
+input [`WIDTH_INTERNAL_PV-1:0] din0, din1, din2, din3;
+output [`WIDTH_INTERNAL_PV-1:0] dout0, dout1, dout2, dout3; // dout0 has highest priority (oldest); dout3 has lowest priority (lastest)
 
-wire	[`WIDTH_INTERNAL-1:0] swapFlit [3:0];
-wire	[`WIDTH_INTERNAL-1:0] straightFlit [3:0];
+wire	[`WIDTH_INTERNAL_PV-1:0] swapFlit [3:0];
+wire	[`WIDTH_INTERNAL_PV-1:0] straightFlit [3:0];
 wire  swap [0:5];
 
 // (1: downward sort; 0: upward sort)

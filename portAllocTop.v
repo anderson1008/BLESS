@@ -7,7 +7,8 @@ module portAllocTop (
 input    [`NUM_PORT-1:0]       req;
 output   [`NUM_PORT-1:0]       alloc, remain;
 
-assign alloc = req;
+highestBit allocProdPort (req, alloc)
+
 assign remain = ~alloc;
 
 endmodule

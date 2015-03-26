@@ -5,11 +5,11 @@
 module permuterBlock (inFlit0, inFlit1, swap, outFlit0, outFlit1);
 
 input                            swap;
-input		[`WIDTH_INTERNAL-1:0] 	inFlit0,inFlit1;
-output 	[`WIDTH_INTERNAL-1:0]	outFlit0, outFlit1;
+input		[`WIDTH_INTERNAL_PV-1:0] 	inFlit0,inFlit1;
+output 	[`WIDTH_INTERNAL_PV-1:0]	outFlit0, outFlit1;
 
-wire	[`WIDTH_INTERNAL-1:0] swapFlit [1:0];
-wire	[`WIDTH_INTERNAL-1:0] straightFlit [1:0];
+wire	[`WIDTH_INTERNAL_PV-1:0] swapFlit [1:0];
+wire	[`WIDTH_INTERNAL_PV-1:0] straightFlit [1:0];
 
 demuxWrapper1to2 demux0(
 	.din			   (inFlit0), 
