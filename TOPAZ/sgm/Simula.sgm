@@ -234,7 +234,7 @@
    <Seed               id=113>
    <Load               id=0.1>
    <MessageLength      id=1>
-   <PacketLength       id=5>
+   <PacketLength       id=2>
    <LinkWidth          id=16>
    <FlitSize           id=5>
    <NetworkClockRatio  id=1>
