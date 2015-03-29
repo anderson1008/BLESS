@@ -122,12 +122,21 @@ void TPZSimpleRouterFlowBless :: initialize()
    m_connections=new unsigned[m_ports+1];
    m_sync=new TPZMessage*[m_ports+1];
    m_connEstablished=new Boolean[m_ports+1];
-
+   m_productiveVector=new Boolean*[m_ports+1];
    for(int i=0; i<m_ports+1; i++)
    {
       m_connections[i] = 0;
       m_connEstablished[i] = false;
       m_sync[i]=0;
+      //m_productiveVector[i] = 0;
+      
+      m_productiveVector[i] = new Boolean [m_ports+1];
+      
+      for (int j=0; j<m_ports+1; j++)
+      {
+         m_productiveVector[i][j] = false;
+      }
+      
    }
 
    setCleanInterfaces(true);
@@ -147,6 +156,7 @@ void TPZSimpleRouterFlowBless :: terminate()
    delete[] m_connections;
    delete[] m_sync;
    delete[] m_connEstablished;
+   delete[] m_productiveVector;
 }
 
 
@@ -174,78 +184,151 @@ Boolean TPZSimpleRouterFlowBless :: inputReading()
    // A: modify: each connection will be released at the unit of each packet.
 
    // by Anderson
-
-   for( outPort=1; outPort<=m_ports; outPort++)
+    for( outPort=1; outPort<=m_ports; outPort++)
    {
       m_connEstablished[outPort] = false;
    }
-
+   
+   unsigned flitIndex=0;
    while ( m_priorityQueue.numberOfElements() != 0 )
    {
       TPZMessage* msg;  // A: construct a msg
       m_priorityQueue.dequeue(msg); // A: consume a msg in the priorityQueue
-
+     /*
+     if (msg->getIdentifier() == 3 && msg->flitNumber() == 5)
+      {
+         cout << "Time is " << getOwnerRouter().getCurrentTime() << endl;
+         cout << "We are at " << getComponent().asString() << endl;
+      }
+      */
+      m_egreeQueue.enqueue(msg);
+      //Boolean * productiveVector =  new Boolean [m_ports+1];
+      flitIndex++;
+      /*
+      PV = new Boolean [m_ports+1];
+      for (outPort=1; outPort<m_ports+1; outPort++)
+      {
+         m_productiveVector[flitIndex][outPort]= false;
+      }
+      */
+      //m_productiveVector[flitIndex] = new Boolean [m_ports+1];
+      for ( outPort = 1; outPort < m_ports+1; outPort++)
+      {
+         if (getDeltaAbs(msg, outPort)==true)
+         {
+            m_productiveVector[flitIndex][outPort] = true;
+         }
+         else
+            m_productiveVector[flitIndex][outPort] = false;
+      }
+   }
+   
+   flitIndex=0;
+   while (m_egreeQueue.numberOfElements()!=0)
+   {
       Boolean outObtained=false;
       Boolean deflected=true;   // A: why deflect the flit by default?
-
-      // A: try to find an available output port.
-      for ( outPort = 1; outPort <= m_ports; outPort++)
+      TPZMessage* msg;  // A: construct a msg
+      m_egreeQueue.dequeue(msg); // A: consume a msg in the priorityQueue
+      flitIndex++;
+      
+      Boolean * preferedPV = new Boolean [m_ports+1];
+      Boolean preferedPortExist = false;
+      
+      for (int i=1; i<m_ports+1; i++)
+         preferedPV[i] = false;
+       
+      for (int i=1; i<m_ports+1; i++)
       {
-         // A: try to allocate an available and productive port.
-         //    since PAB-NOC may have more than one productive port, getDeltaAbs may need to be redefined.
-
-         if (getDeltaAbs(msg, outPort)==true && m_connEstablished[outPort]==false)
-	     {
-	        m_connEstablished[outPort]=true;
-	        //updateMessageInfo(msg, outPort);
-	        ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::SWTraversal);
-	        if ( outPort!=m_ports) // A: not local-bound traffic
-            {
-               ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
-               getOwnerRouter().incrLinkUtilization();// by Anderson
-	        }
-	        outputInterfaz(outPort)->sendData(msg);
-	        #ifndef NO_TRAZA
-               TPZString texto3 = getComponent().asString() + " Routed TIME = ";
-               texto3 += TPZString(getOwnerRouter().getCurrentTime()) + " # " + "oPort=" + TPZString(outPort) + msg->asString() ;
-               TPZWRITE2LOG(texto3);
-            #endif
-	        deflected=false;
-	        outObtained=true;
-	        break;
-	      }
-       }
-
-      // A: did not find an available output port. Deflection occurs.
-      //    In this case, deflect the flit to an unallocated port.
-      if (deflected==true)
-      {
-         for ( outPort = 1; outPort < m_ports; outPort++)
-         {
-            if (m_connEstablished[outPort]==false)
-            {
-                m_connEstablished[outPort]=true;
-                //updateMessageInfo(msg, outPort);
-                ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::SWTraversal);
-                ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
-                outputInterfaz(outPort)->sendData(msg);
-                #ifndef NO_TRAZA
-                    TPZString texto4 = getComponent().asString() + " Deflected TIME = ";
-                    texto4 += TPZString(getOwnerRouter().getCurrentTime()) + " # " + "oPort=" + TPZString(outPort) + msg->asString() ;
-                    TPZWRITE2LOG(texto4);
-                #endif
-                outObtained=true;
-                break;
-            }
-        }
+         for (int j=flitIndex+1; j<m_ports+1; j++)
+            preferedPV[i] = m_productiveVector[j][i] | preferedPV[i];
+         preferedPV[i] = ~preferedPV[i] & m_productiveVector[flitIndex][i]  & (~m_connEstablished[i]);  // the actual non-conflicted outport 
+         preferedPortExist = preferedPortExist | preferedPV[i];
       }
+      
+      if (preferedPortExist)
+      {
+         for ( outPort = 1; outPort <= m_ports; outPort++)
+         {
+            if (preferedPV[outPort] == true )
+            {
+               m_connEstablished[outPort]=true;
+               ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::SWTraversal);
+               if ( outPort!=m_ports) // A: not local-bound traffic
+               {
+                  ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
+                  getOwnerRouter().incrLinkUtilization();// by Anderson
+               }
+               outputInterfaz(outPort)->sendData(msg);
+               #ifndef NO_TRAZA
+                  TPZString texto3 = getComponent().asString() + " Routed TIME = ";
+                  texto3 += TPZString(getOwnerRouter().getCurrentTime()) + " # " + "oPort=" + TPZString(outPort) + msg->asString() ;
+                  TPZWRITE2LOG(texto3);
+               #endif
+               deflected=false;
+               outObtained=true;
+               break;
+            }
+            
+         }
+      }
+      else
+      {
+         for ( outPort = 1; outPort <= m_ports; outPort++)
+         {
+            if (m_productiveVector[flitIndex][outPort]==true && m_connEstablished[outPort]==false)
+           {
+              m_connEstablished[outPort]=true;
+              ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::SWTraversal);
+              if ( outPort!=m_ports) // A: not local-bound traffic
+               {
+                  ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
+                  getOwnerRouter().incrLinkUtilization();// by Anderson
+              }
+              outputInterfaz(outPort)->sendData(msg);
+              #ifndef NO_TRAZA
+                  TPZString texto3 = getComponent().asString() + " Routed TIME = ";
+                  texto3 += TPZString(getOwnerRouter().getCurrentTime()) + " # " + "oPort=" + TPZString(outPort) + msg->asString() ;
+                  TPZWRITE2LOG(texto3);
+               #endif
+              deflected=false;
+              outObtained=true;
+              break;
+            }
+          }
+         
+         /*
+            did not find an available output port. Deflection occurs.
+            In this case, deflect the flit to an unallocated port.
+            Notice that, deflect to consumers is not accepted.
+            So, be aware of the outPort range.
+         */
+         if (deflected==true)
+         {  
+           
+           for ( outPort = m_ports-1; outPort >= 1; outPort--)
+            {
+               if (m_connEstablished[outPort]==false)
+               {
+                   m_connEstablished[outPort]=true;
+                   //updateMessageInfo(msg, outPort);
+                   ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::SWTraversal);
+                   ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
+                   outputInterfaz(outPort)->sendData(msg);
+                   #ifndef NO_TRAZA
+                       TPZString texto4 = getComponent().asString() + " Deflected TIME = ";
+                       texto4 += TPZString(getOwnerRouter().getCurrentTime()) + " # " + "oPort=" + TPZString(outPort) + msg->asString() ;
+                       TPZWRITE2LOG(texto4);
+                   #endif
+                   outObtained=true;
+                   break;
+               }
+           }
+         }
+      }
+      
 
-     if( msg->isTail() || msg->isHeadTail() || msg->isHeader() )
-     {
-         ((TPZNetwork*)(getOwnerRouter().getOwner()))->increHeadTailCount();
-     }
-     // end Anderson
-
+ 
       // A: This is just for precaution.
       if (outObtained==false)
       {
@@ -253,7 +336,9 @@ Boolean TPZSimpleRouterFlowBless :: inputReading()
          err.sprintf("%s :One message did not find output port", (char*)getComponent().asString() );
          EXIT_PROGRAM(err);
       }
+      delete [] preferedPV;
    }
+
 
  
    //**********************************************************************************************************
