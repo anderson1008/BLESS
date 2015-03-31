@@ -57,47 +57,63 @@ routeComp routeCompWest (r_dinW[`WIDTH_INTERNAL-1], r_dinW[`POS_X_DST], r_dinW[`
 routeComp routeCompEast (r_dinE[`WIDTH_INTERNAL-1], r_dinE[`POS_X_DST], r_dinE[`POS_Y_DST], prodVector[1]);
 routeComp routeCompSouth (r_dinS[`WIDTH_INTERNAL-1], r_dinS[`POS_X_DST], r_dinS[`POS_Y_DST], prodVector[2]);
 routeComp routeCompNorth (r_dinN[`WIDTH_INTERNAL-1], r_dinN[`POS_X_DST], r_dinN[`POS_Y_DST], prodVector[3]);
-routeComp routeCompLocal (r_dinLocal[`WIDTH_INTERNAL-1], r_dinLocal[`POS_X_DST], r_dinLocal[`POS_Y_DST], prodVector[4]);
-
-reg [`WIDTH_INTERNAL_PV-1:0] pipeline_reg1  [0:`NUM_PORT-1];
-
-always @ (posedge clk or negedge reset) begin
-   if (~reset) begin
-      pipeline_reg1[0] <= 0;
-      pipeline_reg1[1] <= 0;
-      pipeline_reg1[2] <= 0;
-      pipeline_reg1[3] <= 0;
-      pipeline_reg1[4] <= 0;
-   end
-   else begin
-      pipeline_reg1[0] <= {prodVector[0],r_dinW};
-      pipeline_reg1[1] <= {prodVector[1],r_dinE};
-      pipeline_reg1[2] <= {prodVector[2],r_dinS};
-      pipeline_reg1[3] <= {prodVector[3],r_dinN};
-      pipeline_reg1[4] <= {prodVector[4],r_dinLocal};      
-   end
-end
-
 
 wire [`WIDTH_INTERNAL_PV-1:0] PNout0, PNout1, PNout2, PNout3;
+wire [`WIDTH_INTERNAL_PV-1:0] PNin  [0:`NUM_PORT-2];
+assign PNin[0] = {prodVector[0],r_dinW};
+assign PNin[1] = {prodVector[1],r_dinE};
+assign PNin[2] = {prodVector[2],r_dinS};
+assign PNin[3] = {prodVector[3],r_dinN};
+
 permutationNetwork permutationNetwork (
-pipeline_reg1[0], 
-pipeline_reg1[1], 
-pipeline_reg1[2], 
-pipeline_reg1[3], 
+PNin[0], 
+PNin[1], 
+PNin[2], 
+PNin[3], 
 PNout0, 
 PNout1, 
 PNout2, 
 PNout3
 );
 
+
+reg [`WIDTH_INTERNAL_PV-1:0] pipeline_reg1  [0:`NUM_PORT-2];
+always @ (posedge clk or negedge reset) begin
+   if (~reset) begin
+      pipeline_reg1[0] <= 0;
+      pipeline_reg1[1] <= 0;
+      pipeline_reg1[2] <= 0;
+      pipeline_reg1[3] <= 0;
+   end
+   else begin
+      pipeline_reg1[0] <= PNout0;
+      pipeline_reg1[1] <= PNout1;
+      pipeline_reg1[2] <= PNout2;
+      pipeline_reg1[3] <= PNout3;
+   end
+end
+
+
 wire [`NUM_PORT*`NUM_PORT-1:0] reqVector, allocVector;
-assign reqVector = {pipeline_reg1[4][`POS_PV],PNout3[`POS_PV],PNout2[`POS_PV],PNout1[`POS_PV],PNout0[`POS_PV]};
+assign reqVector = {r_dinLocal[`POS_PV],pipeline_reg1[3][`POS_PV],pipeline_reg1[2][`POS_PV],pipeline_reg1[1][`POS_PV],pipeline_reg1[0][`POS_PV]};
+
+wire [`WIDTH_INTERNAL_PV-1:0] w_dinLocal;
+routeComp routeCompLocal (r_dinLocal[`WIDTH_INTERNAL-1], r_dinLocal[`POS_X_DST], r_dinLocal[`POS_Y_DST], prodVector[4]);
+assign w_dinLocal = {r_dinLocal,prodVector[4]};
 
 portAllocWrapper portAllocWrapper (reqVector, allocVector);
 
 // Strip off PV and valid fields.
 // Flit Format pass through Xbar [PktId, FlitId, Time, Xdst, Ydst, payload];
+
+
+// Second Stage: PA + XT;
+wire [`WIDTH_XBAR-1:0] XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal;
+xbar5Ports xbar5Ports (allocVector, pipeline_reg1[0][`WIDTH_XBAR-1:0], pipeline_reg1[1][`WIDTH_XBAR-1:0], pipeline_reg1[2][`WIDTH_XBAR-1:0], pipeline_reg1[3][`WIDTH_XBAR-1:0], w_dinLocal[`WIDTH_XBAR-1:0], XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal);
+
+
+// Second Stage: PA ; Third Stage: XT
+/*
 reg [`WIDTH_XBAR-1:0] pipeline_reg2  [0:`NUM_PORT-1];
 reg [`NUM_PORT*`NUM_PORT-1:0] pipeline_reg2_allocVector; 
 
@@ -111,11 +127,11 @@ always @ (posedge clk or negedge reset) begin
       pipeline_reg2_allocVector <= 0;
    end
    else begin
-      pipeline_reg2[0] <= PNout0[`WIDTH_XBAR-1:0];
-      pipeline_reg2[1] <= PNout1[`WIDTH_XBAR-1:0];
-      pipeline_reg2[2] <= PNout2[`WIDTH_XBAR-1:0];
-      pipeline_reg2[3] <= PNout3[`WIDTH_XBAR-1:0];
-      pipeline_reg2[4] <= pipeline_reg1[4][`WIDTH_XBAR-1:0];
+      pipeline_reg2[0] <= pipeline_reg1[0][`WIDTH_XBAR-1:0];
+      pipeline_reg2[1] <= pipeline_reg1[1][`WIDTH_XBAR-1:0];
+      pipeline_reg2[2] <= pipeline_reg1[2][`WIDTH_XBAR-1:0];
+      pipeline_reg2[3] <= pipeline_reg1[3][`WIDTH_XBAR-1:0];
+      pipeline_reg2[4] <= w_dinLocal[`WIDTH_XBAR-1:0];
       pipeline_reg2_allocVector <= allocVector;      
    end
 end
@@ -123,6 +139,8 @@ end
 wire [`WIDTH_XBAR-1:0] XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal;
 
 xbar5Ports xbar5Ports (pipeline_reg2_allocVector, pipeline_reg2[0], pipeline_reg2[1], pipeline_reg2[2], pipeline_reg2[3], pipeline_reg2[4], XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal);
+*/
+
 
 always @ (posedge clk or negedge reset) begin
    if (~reset) begin
