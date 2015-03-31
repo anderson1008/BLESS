@@ -85,7 +85,7 @@
    
    typedef TPZPriorityQueue<TPZMessage*>      TPZArbitrationQueue;
    typedef TPZQueue<TPZMessage*>              TPZInjectionQueue;
-   typedef TPZPriorityQueue<TPZMessage*>              TPZEgressQueue;
+
 //*************************************************************************
 
    class TPZSimpleRouterFlowBless : public TPZFlow
@@ -127,18 +127,15 @@
       { m_CleanInterfaces = value; }
       Boolean m_CleanInterfaces;
       Boolean routeComputation(TPZMessage* msg);
+      void sendFlit(TPZMessage* msg);
       
    protected:
       unsigned *m_connections;
       TPZMessage** m_sync;
-      TPZMessage* m_bypassFlit;
-      TPZEgressQueue m_egreeQueue;
-      //TPZPVQueue m_PVQueue;
       TPZArbitrationQueue m_priorityQueue;
       TPZInjectionQueue m_injectionQueue;
       Boolean* m_connEstablished;
       unsigned m_ports;
-      Boolean ** m_productiveVector;
       
             
 };
