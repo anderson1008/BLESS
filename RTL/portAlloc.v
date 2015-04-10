@@ -13,12 +13,12 @@ wire [`NUM_PORT-1:0] tempAlloc, prodPort, deflectPort;
 wire deflect;
 
 assign tempAlloc = req & avail;
-assign deflect = (tempAlloc == 0) ? 1'b1 : 1'b0;
+assign deflect = (|tempAlloc) ? 1'b0 : 1'b1;
 
 highestBit allocProdPort (tempAlloc, prodPort);
-highestBit deflectToPort (avail, deflectPort);
+highestBit deflectToPort ({1'b0,avail[3:0]}, deflectPort);
 
-assign alloc = deflect ?  deflectPort : prodPort;
+assign alloc = (|req) ? (deflect ?  deflectPort : prodPort) : 0;
 assign remain = ~alloc & avail;
 
 endmodule

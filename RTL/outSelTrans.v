@@ -21,7 +21,7 @@ always @ * begin
       `NUM_PORT'b00001: 
          outSel <= `LOG_NUM_PORT'd0;    
       default:
-         outSel <= `LOG_NUM_PORT'd0;   
+         outSel <= `LOG_NUM_PORT'd7;   
    endcase
 end
 

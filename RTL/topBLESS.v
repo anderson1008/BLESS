@@ -65,19 +65,9 @@ assign PNin[1] = {prodVector[1],r_dinE};
 assign PNin[2] = {prodVector[2],r_dinS};
 assign PNin[3] = {prodVector[3],r_dinN};
 
-permutationNetwork permutationNetwork (
-PNin[0], 
-PNin[1], 
-PNin[2], 
-PNin[3], 
-PNout0, 
-PNout1, 
-PNout2, 
-PNout3
-);
+permutationNetwork permutationNetwork (PNin[0], PNin[1], PNin[2], PNin[3], PNout0, PNout1, PNout2, PNout3);
 
-
-reg [`WIDTH_INTERNAL_PV-1:0] pipeline_reg1  [0:`NUM_PORT-2];
+reg [`WIDTH_INTERNAL_PV-1:0] pipeline_reg1  [0:3];
 always @ (posedge clk or negedge reset) begin
    if (~reset) begin
       pipeline_reg1[0] <= 0;
@@ -93,53 +83,23 @@ always @ (posedge clk or negedge reset) begin
    end
 end
 
+// Local Inject
+wire [`WIDTH_INTERNAL_PV-1:0] w_dinLocal;
+wire [3:0] validVector;
+routeComp routeCompLocal (r_dinLocal[`WIDTH_INTERNAL-1], r_dinLocal[`POS_X_DST], r_dinLocal[`POS_Y_DST], prodVector[4]);
+assign validVector = {pipeline_reg1[3][`POS_VALID],pipeline_reg1[2][`POS_VALID],pipeline_reg1[1][`POS_VALID],pipeline_reg1[0][`POS_VALID]};
+assign w_dinLocal = (&validVector) ? 0 : {prodVector[4],r_dinLocal}; // check inject condition
 
 wire [`NUM_PORT*`NUM_PORT-1:0] reqVector, allocVector;
-assign reqVector = {r_dinLocal[`POS_PV],pipeline_reg1[3][`POS_PV],pipeline_reg1[2][`POS_PV],pipeline_reg1[1][`POS_PV],pipeline_reg1[0][`POS_PV]};
-
-wire [`WIDTH_INTERNAL_PV-1:0] w_dinLocal;
-routeComp routeCompLocal (r_dinLocal[`WIDTH_INTERNAL-1], r_dinLocal[`POS_X_DST], r_dinLocal[`POS_Y_DST], prodVector[4]);
-assign w_dinLocal = {r_dinLocal,prodVector[4]};
-
+assign reqVector = {w_dinLocal[`POS_PV],pipeline_reg1[3][`POS_PV],pipeline_reg1[2][`POS_PV],pipeline_reg1[1][`POS_PV],pipeline_reg1[0][`POS_PV]};
 portAllocWrapper portAllocWrapper (reqVector, allocVector);
 
 // Strip off PV and valid fields.
 // Flit Format pass through Xbar [PktId, FlitId, Time, Xdst, Ydst, payload];
 
-
 // Second Stage: PA + XT;
 wire [`WIDTH_XBAR-1:0] XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal;
 xbar5Ports xbar5Ports (allocVector, pipeline_reg1[0][`WIDTH_XBAR-1:0], pipeline_reg1[1][`WIDTH_XBAR-1:0], pipeline_reg1[2][`WIDTH_XBAR-1:0], pipeline_reg1[3][`WIDTH_XBAR-1:0], w_dinLocal[`WIDTH_XBAR-1:0], XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal);
-
-
-// Second Stage: PA ; Third Stage: XT
-/*
-reg [`WIDTH_XBAR-1:0] pipeline_reg2  [0:`NUM_PORT-1];
-reg [`NUM_PORT*`NUM_PORT-1:0] pipeline_reg2_allocVector; 
-
-always @ (posedge clk or negedge reset) begin
-   if (~reset) begin
-      pipeline_reg2[0] <= 0;
-      pipeline_reg2[1] <= 0;
-      pipeline_reg2[2] <= 0;
-      pipeline_reg2[3] <= 0;
-      pipeline_reg2[4] <= 0;
-      pipeline_reg2_allocVector <= 0;
-   end
-   else begin
-      pipeline_reg2[0] <= pipeline_reg1[0][`WIDTH_XBAR-1:0];
-      pipeline_reg2[1] <= pipeline_reg1[1][`WIDTH_XBAR-1:0];
-      pipeline_reg2[2] <= pipeline_reg1[2][`WIDTH_XBAR-1:0];
-      pipeline_reg2[3] <= pipeline_reg1[3][`WIDTH_XBAR-1:0];
-      pipeline_reg2[4] <= w_dinLocal[`WIDTH_XBAR-1:0];
-      pipeline_reg2_allocVector <= allocVector;      
-   end
-end
-
-wire [`WIDTH_XBAR-1:0] XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal;
-
-xbar5Ports xbar5Ports (pipeline_reg2_allocVector, pipeline_reg2[0], pipeline_reg2[1], pipeline_reg2[2], pipeline_reg2[3], pipeline_reg2[4], XbarOutW, XbarOutE, XbarOutS, XbarOutN, XbarOutLocal);
-*/
 
 
 always @ (posedge clk or negedge reset) begin

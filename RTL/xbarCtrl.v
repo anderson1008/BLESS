@@ -34,7 +34,7 @@ always @ * begin
       1: inSel[1] <= 4;
       2: inSel[2] <= 4;
       3: inSel[3] <= 4;
-      4: inSel[4] <= 4;    
+      4: inSel[4] <= 4; 
    endcase  
    
    case (outSel[3])
@@ -70,41 +70,6 @@ always @ * begin
    endcase   
 end
 
-
-
-
-
-/*
-reg i = 0;
-
-always @ * begin
-   for (i = 0; i < `NUM_PORT; i=i+1) begin
-      case (alloc[i])
-         `NUM_PORT'b1xxxx: begin
-               outSel[i] <= 4;
-               inSel[4] <= i;
-            end
-         `NUM_PORT'b01xxx: begin
-               outSel[i] <= 3;
-               inSel[3] <= i;
-            end
-         `NUM_PORT'b001xx: begin
-               outSel[i] <= 2;
-               inSel[2] <= i;
-            end
-         `NUM_PORT'b0001x: begin
-               outSel[i] <= 1;
-               inSel[1] <= i;
-            end
-         `NUM_PORT'b00001: begin
-               outSel[i] <= 0;
-               inSel[0] <= i;
-            end
-      endcase
-   end
-end
-*/
-
 generate 
    for (j=0; j<`NUM_PORT; j=j+1) begin : mergeOutput
       assign outSelVector[j*`LOG_NUM_PORT+:`LOG_NUM_PORT] = outSel[j];
@@ -112,32 +77,6 @@ generate
    end
 endgenerate
 
-/*
-always @ * begin
-   case (alloc)
-      `NUM_PORT'b1xxxx: begin
-            outSel[4] <= `LOG_NUM_PORT'd4;
-            inSel[4] <= `LOG_NUM_PORT'd4;
-         end
-      `NUM_PORT'b01xxx: begin
-            outSel[4] <= `LOG_NUM_PORT'd3;
-            inSel[3] <= `LOG_NUM_PORT'd4;
-         end
-      `NUM_PORT'b001xx: begin
-            outSel[4] <= `LOG_NUM_PORT'd2;
-            inSel[2] <= `LOG_NUM_PORT'd4;
-         end
-      `NUM_PORT'b0001x: begin
-            outSel[4] <= `LOG_NUM_PORT'd1;
-            inSel[1] <= `LOG_NUM_PORT'd4;
-         end
-      `NUM_PORT'b00001: begin
-            outSel[4] <= `LOG_NUM_PORT'd0;
-            inSel[0] <= `LOG_NUM_PORT'd4;
-         end
-   endcase
-end
-*/
 
 
 endmodule
