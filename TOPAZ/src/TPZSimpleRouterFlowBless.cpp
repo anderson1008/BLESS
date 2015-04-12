@@ -194,6 +194,7 @@ Boolean TPZSimpleRouterFlowBless :: inputReading()
      m_injectionQueue.dequeue(localMsg); // Anderson: construct a outstanding msg.
      uTIME timeGen=localMsg->generationTime();
      routeComputation(localMsg);
+     ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::RouteComputation);
    }
    else
      localMsg = 0;
@@ -231,6 +232,7 @@ Boolean TPZSimpleRouterFlowBless :: inputReading()
         // two stage arbitration may be implemented here.
         uTIME timeGen=m_sync[inPort]->generationTime(); // Anderson: get the time stamp information of each arrival flits
         routeComputation(m_sync[inPort]);
+        ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::RouteComputation);
         m_priorityQueue.enqueue(m_sync[inPort], timeGen); // Anderson: add into the priorityQueue.
 
 #ifndef NO_TRAZA
@@ -262,8 +264,7 @@ void  TPZSimpleRouterFlowBless :: sendFlit(TPZMessage* msg)
         if ( outPort!=m_ports) 
          {
             ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
-            getOwnerRouter().incrLinkUtilization();
-        }
+         }
         outputInterfaz(outPort)->sendData(msg);
         #ifndef NO_TRAZA
             TPZString texto3 = getComponent().asString() + " Routed TIME = ";
@@ -287,6 +288,7 @@ void  TPZSimpleRouterFlowBless :: sendFlit(TPZMessage* msg)
              m_connEstablished[outPort]=true;
              ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::SWTraversal);
              ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::LinkTraversal);
+             ((TPZNetwork*)(getOwnerRouter().getOwner()))->incrEventCount( TPZNetwork::RouterDeflect);
              outputInterfaz(outPort)->sendData(msg);
              #ifndef NO_TRAZA
                  TPZString texto4 = getComponent().asString() + " Deflected TIME = ";

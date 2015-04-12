@@ -678,8 +678,12 @@ TPZString TPZSimulation :: writeSimulationStatus()
    TPZString("\n") + TPZString(latMediaMsgNetwork) +
    TPZString("\n") + TPZString(latMediaMsgBuffer) +
    TPZString("\n") + TPZString(m_Network->getMaximLatency(TPZNetwork::Message)) +
-   TPZString("\n") + TPZString(m_LastMessage) + TPZString("\n");
-
+   TPZString("\n") + TPZString(m_LastMessage) +
+   TPZString("\n") + TPZString(m_Network->getEventCount( TPZNetwork::RouterDeflect))+
+   TPZString("\n") + TPZString(m_Network->getEventCount( TPZNetwork::RouterBypass))+
+   TPZString("\n") + TPZString(m_Network->getEventCount( TPZNetwork::RouteComputation))+
+   TPZString("\n") + TPZString(m_Network->getEventCount( TPZNetwork::LinkTraversal))+
+   TPZString("\n") + TPZString(m_Network->getEventCount( TPZNetwork::SWTraversal)); 
   //****************************************************************************************************************************
    // VERBOSITY=0
    //****************************************************************************************************************************
@@ -722,7 +726,7 @@ TPZString TPZSimulation :: writeSimulationStatus()
    TPZString("\n Buffer message latency  = ") + TPZString(latMediaMsgBuffer) +
    TPZString("\n Maximum message latency = ") + TPZString(m_Network->getMaximLatency(TPZNetwork::Message)) +
    TPZString("\n Last Message cycle      = ") + TPZString(m_LastMessage) + TPZString("\n");
-   */
+  
    buffer += TPZString("***********************************************************\n");
 
    TPZString("\n\n******************** EVENT COUNTING **********************")+
@@ -735,7 +739,7 @@ TPZString TPZSimulation :: writeSimulationStatus()
    TPZString("\n Link Traversal          = ") + TPZString(m_Network->getEventCount( TPZNetwork::LinkTraversal))+
    TPZString("\n\n**********************************************************")+
    TPZString("\n");
-
+ */
 	     //****************************************************************************************************************************
              // VERBOSITY=1
              //****************************************************************************************************************************
