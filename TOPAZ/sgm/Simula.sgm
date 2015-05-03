@@ -1,5 +1,9 @@
 <!-- See http://www.atc.unican.es/topaz/ for more information -->
 
+
+<!-- LinkWidth indicates size of the flits (in bytes). This tag does not have any effect in non-trace simulation.-->
+
+
 <!-- ***-****-***-T stands for Trace -->
 
 <Simulation id="T44-BLESS-NOC-T-blackScholes">
@@ -10,7 +14,7 @@
    <Seed               id=113>
    <Load               id=0.1>
    <MessageLength      id=1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -22,7 +26,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 <Simulation id="T44-BLESS-NOC-T-canneal">
@@ -33,7 +37,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -45,7 +49,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -57,7 +61,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -70,7 +74,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -82,7 +86,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -94,7 +98,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -106,7 +110,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -119,7 +123,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -132,7 +136,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -145,7 +149,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -158,7 +162,7 @@
    <Seed               id=113>
    <MessageLength      id=1>
    <Load               id=0.1>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
 </Simulation>
 
 
@@ -175,7 +179,10 @@
    <Load               id=0.1>
    <MessageLength      id=1>
    <PacketLength       id=2>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
+   <FlitSize           id=5>
+   <NetworkClockRatio  id=1>
+   <UnifyNetworks      id=1>   
 </Simulation>
 
 <Simulation id="T88-BLESS-NOC">
@@ -187,7 +194,7 @@
    <Load               id=0.1>
    <MessageLength      id=1>
    <PacketLength       id=2>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
    <FlitSize           id=5>
    <NetworkClockRatio  id=1>
    <UnifyNetworks      id=1>
@@ -202,7 +209,7 @@
    <Load               id=0.1>
    <MessageLength      id=1>
    <PacketLength       id=2>
-   <LinkWidth          id=16>
+   <LinkWidth          id=32>
    <FlitSize           id=5>
    <NetworkClockRatio  id=1>
    <UnifyNetworks      id=1>
